@@ -1,0 +1,11 @@
+# binarios gerados (recompile com go build; veja o README)
+bin/
+
+# GIFs gerados pelo pixelart (go run .)
+pixelart/out/
+
+# arquivos proprietarios da Positivo (tema de fabrica e projeto base)
+backup-tema-fabrica/
+
+# configuracao pessoal do Claude Code
+.claude/settings.local.json
