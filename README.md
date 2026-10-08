@@ -37,7 +37,7 @@ A minitela é o LCD de 1,54" (240×240) que fica abaixo do teclado do notebook. 
 
 - Notebook **Positivo Vision R15M** com a minitela (dispositivo USB `VID_0324&PID_0324`).
 - **Windows 10 ou 11.**
-- **[Go 1.27+](https://go.dev/dl/)** para compilar.
+- **[Go 1.27+](https://go.dev/dl/)** para compilar, ou o zip pronto da [página de releases](https://github.com/zdsbfkjfbc/minitela/releases/latest), que já traz os executáveis e os GIFs.
 - O app oficial **[PositivoMinitela](https://apps.microsoft.com/search?query=positivo%20minitela)** (Microsoft Store). Ele traz o compilador de temas e o tema de fábrica.
 - **[Claude Code](https://docs.claude.com/en/docs/claude-code/overview)** para as reações e o XP.
 
@@ -55,6 +55,9 @@ bin\mtc.exe handshake
 ```
 
 O `handshake` deve responder `handshake OK`. Se falhar, feche o app oficial: a minitela aceita um programa por vez.
+
+> [!TIP]
+> **Sem Go?** Baixe o `minitela-vX.Y.Z-windows-amd64.zip` da [última versão](https://github.com/zdsbfkjfbc/minitela/releases/latest), extraia e siga a partir do passo 2 dentro da pasta extraída. No passo 3, pule o `go run .`: os GIFs já estão em `pixelart\out`.
 
 ### 2. Copie os arquivos de fábrica
 
