@@ -1,0 +1,100 @@
+# Compila, testa e publica um release a cada tag v* (ex.: git tag v1.1.0 && git push origin v1.1.0).
+# Rodado a mao (Actions > release > Run workflow), so compila e guarda o pacote como artefato,
+# sem publicar nada: serve para conferir o pacote antes de criar a tag.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.sha) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: tools/mtc/go.mod
+          cache-dependency-path: tools/mtc/go.sum
+
+      - name: Testes
+        working-directory: tools/mtc
+        run: |
+          go vet ./...
+          go test -count=1 ./...
+
+      - name: Monta o pacote
+        run: |
+          $name = "minitela-$env:VERSION-windows-amd64"
+          $pkg  = "dist/pkg/$name"
+          New-Item -ItemType Directory -Force "$pkg/bin", "$pkg/xp", "$pkg/pixelart/out", dist/assets | Out-Null
+          $pkg = (Resolve-Path $pkg).Path
+
+          Push-Location tools/mtc
+          go build -trimpath -ldflags "-s -w" -o "$pkg/bin/mtc.exe" .
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go build -trimpath -ldflags "-s -w -H=windowsgui" -o "$pkg/bin/mtcw.exe" .
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Pop-Location
+
+          Push-Location pixelart
+          go run . -out "$pkg/pixelart/out"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go run . -skin ninja -out "$pkg/pixelart/out"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Pop-Location
+
+          Copy-Item xp/xp-config.json "$pkg/xp/"
+          Copy-Item LICENSE, README.md $pkg
+
+          # ZipFile do .NET grava os caminhos com "/" (o Compress-Archive do PowerShell 5.1 gravaria "\").
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [IO.Compression.ZipFile]::CreateFromDirectory($pkg, "$PWD/dist/assets/$name.zip", 'Optimal', $true)
+          Copy-Item "$pkg/bin/mtc.exe", "$pkg/bin/mtcw.exe" dist/assets/
+
+          Push-Location dist/assets
+          (Get-ChildItem -File) | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.Name).Hash.ToLower(), $_.Name } |
+            Set-Content -Encoding ascii SHA256SUMS.txt
+          Get-Content SHA256SUMS.txt
+          Pop-Location
+
+      - name: Confere o pacote
+        run: |
+          $zip = Get-ChildItem dist/assets/*.zip
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $entries = [IO.Compression.ZipFile]::OpenRead($zip.FullName).Entries.FullName
+          $entries
+          $root = "minitela-$env:VERSION-windows-amd64"
+          $need = 'bin/mtc.exe', 'bin/mtcw.exe', 'xp/xp-config.json', 'pixelart/out/working.gif', 'pixelart/out/ninja/working.gif', 'LICENSE'
+          $missing = $need | Where-Object { "$root/$_" -notin $entries }
+          if ($missing) { throw "faltando no zip: $missing" }
+          if ($entries -match '\\') { throw 'caminho com "\" dentro do zip' }
+
+      - name: Guarda o pacote (execucao manual)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: minitela-${{ env.VERSION }}
+          path: dist/assets/
+
+      - name: Publica o release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          (Get-Content .github/release-notes.md -Raw).
+            Replace('{{VERSION}}', $env:VERSION).
+            Replace('{{REPO}}', '${{ github.repository }}').
+            Replace('{{SHA}}', '${{ github.sha }}') | Set-Content -Encoding utf8 dist/notes.md
+          gh release create $env:VERSION (Get-ChildItem dist/assets -File).FullName `
+            --title "minitela $env:VERSION" --notes-file dist/notes.md --verify-tag

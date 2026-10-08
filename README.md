@@ -207,6 +207,8 @@ go vet ./...
 
 Depois de recompilar ou editar o `xp\xp-config.json`, rode `bin\mtc.exe install`: os hooks usam a cópia instalada, que não se atualiza sozinha. A organização do código está na [referência](docs/referencia.md#organização-do-código), e os resultados da última rodada de testes em [ANALISE-E-TESTES.md](ANALISE-E-TESTES.md).
 
+**Lançar uma versão:** `git tag v1.1.0` e `git push origin v1.1.0`. O GitHub Actions ([`release.yml`](.github/workflows/release.yml)) roda os testes, compila o `mtc.exe` e o `mtcw.exe`, gera os GIFs, monta o zip com as somas SHA-256 e publica o release. Para conferir o pacote antes, rode o workflow à mão em *Actions → release → Run workflow*: ele só compila e guarda o resultado como artefato.
+
 Contribuições são bem-vindas: abra uma issue ou um pull request. Novas peles são um ótimo lugar para começar (veja `pixelart\ninja.go`).
 
 ## Créditos e licença
