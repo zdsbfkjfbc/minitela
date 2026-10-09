@@ -50,7 +50,7 @@ jobs:
 
       - name: Cobertura
         working-directory: tools/mtc
-        run: go tool cover -func=coverage.out | Select-Object -Last 1
+        run: go tool cover "-func=coverage.out" | Select-Object -Last 1
 
       - name: Fuzzing curto
         working-directory: tools/mtc
