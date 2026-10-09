@@ -59,9 +59,9 @@ func (c *canvas) rect(x0, y0, x1, y1 int, col uint8) { // inclusivo
 }
 
 type pose struct {
-	dy         int  // deslocamento vertical do corpo (pulo)
-	armL, armR int  // deslocamento dos bracos em linhas (negativo = para cima)
-	eyes       int  // 0 normal, 1 piscando, 2 feliz (^ ^)
+	dy         int // deslocamento vertical do corpo (pulo)
+	armL, armR int // deslocamento dos bracos em linhas (negativo = para cima)
+	eyes       int // 0 normal, 1 piscando, 2 feliz (^ ^)
 }
 
 // clawd desenha o mascote.

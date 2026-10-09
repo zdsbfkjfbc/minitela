@@ -1,5 +1,6 @@
 # minitela
 
+[![Testes](https://github.com/zdsbfkjfbc/minitela/actions/workflows/test.yml/badge.svg)](https://github.com/zdsbfkjfbc/minitela/actions/workflows/test.yml)
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE)
 [![Go 1.27+](https://img.shields.io/badge/Go-1.27%2B-00ADD8?logo=go&logoColor=white)](https://go.dev/dl/)
 [![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)](#requisitos)

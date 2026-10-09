@@ -1,0 +1,79 @@
+# Testes e analises a cada push na main e em cada pull request.
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: tools/mtc/go.mod
+          cache-dependency-path: tools/mtc/go.sum
+
+      - name: Formatacao (gofmt)
+        # tools/mtc/minitela fica de fora: e uma copia sem alteracoes do Minitela Go (ver NOTICE.txt)
+        run: |
+          $files = gofmt -l tools pixelart | Where-Object { $_ -notmatch '[\\/]mtc[\\/]minitela[\\/]' }
+          if ($files) { $files; throw 'arquivos fora do gofmt (rode: gofmt -w <arquivo>)' }
+
+      - name: go vet
+        run: |
+          foreach ($m in 'tools/mtc', 'pixelart') {
+            Push-Location $m; go vet ./...; $code = $LASTEXITCODE; Pop-Location
+            if ($code) { exit $code }
+          }
+
+      - name: Testes com detector de corrida
+        working-directory: tools/mtc
+        env:
+          CGO_ENABLED: "1" # o -race precisa do gcc, que o runner do Windows ja traz
+        run: go test -race -count=1 -coverprofile=coverage.out ./...
+
+      - name: Cobertura
+        working-directory: tools/mtc
+        run: go tool cover -func=coverage.out | Select-Object -Last 1
+
+      - name: Fuzzing curto
+        working-directory: tools/mtc
+        run: |
+          $alvos = @{ '.' = 'FuzzValidateTheme', 'FuzzScreenText'; './internal/xp' = 'FuzzApply', 'FuzzLoad' }
+          foreach ($pkg in $alvos.Keys) {
+            foreach ($f in $alvos[$pkg]) {
+              go test $pkg -run '^$' -fuzz "^$f$" -fuzztime 10s
+              if ($LASTEXITCODE) { exit $LASTEXITCODE }
+            }
+          }
+
+      - name: staticcheck
+        working-directory: tools/mtc
+        # versao de desenvolvimento: a v0.7.0 estavel nao le o Go 1.27
+        run: go run honnef.co/go/tools/cmd/staticcheck@v0.7.0-0.dev.0.20260824195211-6cb65e58a558 ./...
+
+      - name: govulncheck
+        working-directory: tools/mtc
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+
+      - name: Compila o pixelart e gera os GIFs
+        working-directory: pixelart
+        run: |
+          go run . -out "$env:RUNNER_TEMP/gifs"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go run . -skin ninja -out "$env:RUNNER_TEMP/gifs"
