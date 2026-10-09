@@ -45,7 +45,8 @@ jobs:
         working-directory: tools/mtc
         env:
           CGO_ENABLED: "1" # o -race precisa do gcc, que o runner do Windows ja traz
-        run: go test -race -count=1 -coverprofile=coverage.out ./...
+        # entre aspas: o pwsh quebraria -coverprofile=coverage.out em dois argumentos no "."
+        run: go test -race -count=1 "-coverprofile=coverage.out" ./...
 
       - name: Cobertura
         working-directory: tools/mtc
