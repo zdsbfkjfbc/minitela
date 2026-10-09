@@ -64,5 +64,5 @@ Passar tudo para Go deixaria o projeto em **uma linguagem só**, com os mesmos t
 - ~~Atualizar `golang.org/x/sys` para v0.44.0 (GO-2026-5024).~~ Feito; `govulncheck` sem nenhuma vulnerabilidade.
 - ~~`git init` com `.gitignore`.~~ Feito (`bin\`, `pixelart\out\`, `backup-tema-fabrica\` e `.claude\settings.local.json` fora). **Ainda sem o primeiro commit.**
 - ~~Instalar o `mtc` num caminho estável.~~ Feito com `mtc install` em `%LOCALAPPDATA%\Programs\mtc`; os hooks globais e a tarefa `MinitelaClawdDefault` apontam para lá. Depois de recompilar ou editar o `xp-config.json`, rode `bin\mtc.exe install` de novo.
-- `go test -race` continua sem rodar (falta o `gcc`).
+- ~~`go test -race` sem rodar (falta o `gcc`).~~ Roda no GitHub Actions (`test.yml`), cujo runner do Windows traz o `gcc`: **nenhuma corrida detectada**. Localmente continua sem `gcc`.
 - A biblioteca copiada (`tools\mtc\minitela`) não segue o `gofmt` em dois arquivos (`download.go` sem quebra de linha final, alinhamento em `registers.go`), assim como no projeto original. Ela fica como está, por ser uma cópia sem alterações, e o CI a deixa fora da checagem de formatação. As quebras de linha CRLF que ela tinha foram normalizadas para LF pelo `.gitattributes`.
