@@ -18,7 +18,7 @@ jobs:
       run:
         shell: pwsh
     env:
-      VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.sha) }}
+      VERSION: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.run_number) }}
     steps:
       - uses: actions/checkout@v7
 
